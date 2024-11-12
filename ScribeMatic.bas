@@ -70,8 +70,12 @@ Sub ScribeMatic()
     keystrokeGoal = CInt(userInput)
     
     ' Load text from the selected file
+    Dim line As String
     Open filePath For Input As #1
-    fileText = Input$(LOF(1), 1)
+    Do Until EOF(1)
+        Line Input #1, line
+        fileText = fileText & line & vbCrLf
+    Loop
     Close #1
 
     ' Initialize collection to store changes
