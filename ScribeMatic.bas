@@ -109,7 +109,7 @@ Sub ScribeMatic()
     keystrokeText = selectedTextKeystrokes & " / " & keystrokeGoal & " keystrokes reached."
     doc.Range(doc.Content.End - 1, doc.Content.End).InsertAfter vbCrLf & keystrokeText
 
-    MsgBox "Comparison complete! Changes have been listed."
+    Call SaveAsFileDialog
 End Sub
 
 ' Function to calculate Levenshtein differences between selected and file text
@@ -347,7 +347,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                         lastInsertTextBox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
                         
                         ' Format text box
-                        Call formatTextBox(lastInsertTextBox)
+                        Call FormatTextBox(lastInsertTextBox)
                         
                         ' Set content of text box
                         lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & vbCrLf & ChrW(&H22A5)
@@ -362,19 +362,19 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                     selection.Font.UnderlineColor = RGB(255, 0, 1)
                     
                     ' Add text box with delete marker
-                    Set textbox = ActiveDocument.Shapes.AddTextbox(msoTextOrientationHorizontal, _
+                    Set textBox = ActiveDocument.Shapes.AddTextbox(msoTextOrientationHorizontal, _
                         selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary), _
                         selection.Range.Information(wdVerticalPositionRelativeToTextBoundary), _
                         15, 20)
                         
-                    textbox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
-                    textbox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary) + 12
+                    textBox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
+                    textBox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary) + 12
                     
                     ' Format text box
-                    Call formatTextBox(textBox)
+                    Call FormatTextBox(textBox)
                     
                     ' Set delete marker
-                    textbox.TextFrame.TextRange.text = "/"
+                    textBox.TextFrame.TextRange.text = "/"
                     
                     ' Update selection
                     selection.End = originalEnd + 1
@@ -385,19 +385,19 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                     selection.Font.UnderlineColor = RGB(255, 0, 1)
                     
                     ' Add text box with replacement character
-                    Set textbox = ActiveDocument.Shapes.AddTextbox(msoTextOrientationHorizontal, _
+                    Set textBox = ActiveDocument.Shapes.AddTextbox(msoTextOrientationHorizontal, _
                         selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary), _
                         selection.Range.Information(wdVerticalPositionRelativeToTextBoundary), _
                         15, 20)
                         
-                    textbox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
-                    textbox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
+                    textBox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
+                    textBox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
                                         
                     ' Format text box
-                    Call formatTextBox(textBox)
+                    Call FormatTextBox(textBox)
                     
                     ' Set replacement text
-                    textbox.TextFrame.TextRange.text = change("newChar")
+                    textBox.TextFrame.TextRange.text = change("newChar")
                     
                     ' Update selection
                     selection.End = originalEnd + 1
@@ -409,18 +409,36 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
 End Sub
 
 ' Formats the given text box by setting its font, margins, alignment, and making the text transparent with no border.
-Private Sub formatTextBox(ByRef textbox As shape)
-    textbox.Fill.Transparency = 1
-    textbox.TextFrame.TextRange.Font.Size = 12
-    textbox.TextFrame.TextRange.Font.Name = "Courier New"
-    textbox.TextFrame.TextRange.Font.COLOR = RGB(255, 0, 1)
-    textbox.TextFrame.TextRange.Font.Bold = True
-    textbox.TextFrame.MarginTop = 0
-    textbox.TextFrame.MarginBottom = 0
-    textbox.TextFrame.MarginLeft = 0
-    textbox.TextFrame.MarginRight = 0
-    textbox.TextFrame.TextRange.ParagraphFormat.SpaceAfter = 0
-    textbox.TextFrame.VerticalAnchor = msoAnchorBottom
-    textbox.TextFrame.TextRange.ParagraphFormat.Alignment = wdAlignParagraphCenter
-    textbox.line.Visible = msoFalse
+Private Sub FormatTextBox(ByRef textBox As shape)
+    With textBox
+        .Fill.Transparency = 1
+        .TextFrame.TextRange.Font.Size = 12
+        .TextFrame.TextRange.Font.Name = "Courier New"
+        .TextFrame.TextRange.Font.COLOR = RGB(255, 0, 1)
+        .TextFrame.TextRange.Font.Bold = True
+        .TextFrame.MarginTop = 0
+        .TextFrame.MarginBottom = 0
+        .TextFrame.MarginLeft = 0
+        .TextFrame.MarginRight = 0
+        .TextFrame.TextRange.ParagraphFormat.SpaceAfter = 0
+        .TextFrame.VerticalAnchor = msoAnchorBottom
+        .TextFrame.TextRange.ParagraphFormat.Alignment = wdAlignParagraphCenter
+        .line.Visible = msoFalse
+    End With
+End Sub
+
+' SaveAs Dialog with suffix "_Korrektur"
+Private Sub SaveAsFileDialog()
+    Dim SaveAsDlg As fileDialog
+    Set SaveAsDlg = Application.fileDialog(msoFileDialogSaveAs)
+    With SaveAsDlg
+        .InitialView = msoFileDialogViewList
+        .InitialFileName = ActiveDocument.Path & Application.PathSeparator & Split(ActiveDocument.Name, ".")(0) & "_Korrektur" & ".pdf"
+        .Title = "Speichern unter ... (Exportdatei für " & var & ")"
+    End With
+    
+    ' Show the dialog
+    If Not SaveAsDlg.Show = -1 Then ' -1 means the user clicked "Save"
+        MsgBox "Save cancelled."
+    End If
 End Sub
