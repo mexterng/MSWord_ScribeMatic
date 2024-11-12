@@ -1,4 +1,3 @@
-Attribute VB_Name = "ScribeMatic"
 ' Module: ScribeMatic
 
 Private INVALIDCHARS As Variant
@@ -23,6 +22,7 @@ Sub ScribeMatic()
     INVALIDCHARS = Array(vbCrLf, vbCr, vbLf)
     Dim doc As Document
     Dim selectedText As String
+    Dim startRemoved As Integer
     Dim filePath As String
     Dim fileText As String
     Dim fileDialog As fileDialog
@@ -37,7 +37,13 @@ Sub ScribeMatic()
     Set doc = ActiveDocument
 
     ' Get the selected text and clean it
-    selectedText = cleanText(Selection.text)
+    Dim dict As Object
+    Set dict = cleanText(selection.text)
+    selectedText = dict("cleanedText")
+    startRemoved = dict("startRemoved")
+    
+    selection.Start = selection.Start + startRemoved
+    selection.End = selection.Start + Len(selectedText)
     
     If Len(selectedText) = 0 Then
         MsgBox "No text selected."
@@ -84,37 +90,19 @@ Sub ScribeMatic()
         Next i
         
         ' Filter changes based on keystrokeGoal
+        Dim endPos As Long
+        endPos = changes(1)("position")
         For Each elem In changes
-            If Not (elem("changeType") = Insert And elem("keystroke") > keystrokeGoal) Then
+            If Not (elem("changeType") = Insert And elem("keystroke") > keystrokeGoal) Or endPos <> elem("position") Then
                 cleanedChanges.Add elem
             End If
         Next elem
         Set changes = cleanedChanges
     End If
-
-    ' Display changes in a table at the document's end
-    Dim tbl As table
-    Set tbl = doc.Tables.Add(doc.Range(doc.Content.End - 1, doc.Content.End), changes.Count + 1, 5)
-
-    ' Add table headers
-    tbl.Cell(1, 1).Range.text = "Pos."
-    tbl.Cell(1, 2).Range.text = "Key."
-    tbl.Cell(1, 3).Range.text = "Old"
-    tbl.Cell(1, 4).Range.text = "New"
-    tbl.Cell(1, 5).Range.text = "Type"
-
-    ' Populate table with changes
-    Dim k As Integer, row As Integer
-    row = 2 ' Start from second row
-    For k = 1 To changes.Count
-        Set change = changes(k)
-        tbl.Cell(row, 1).Range.text = change("position") ' Position
-        tbl.Cell(row, 2).Range.text = change("keystroke") ' Keystroke count
-        tbl.Cell(row, 3).Range.text = change("oldChar") ' Old character
-        tbl.Cell(row, 4).Range.text = change("newChar") ' New character
-        tbl.Cell(row, 5).Range.text = getChangeTypeString(change("changeType")) ' Change type (converted to string)
-        row = row + 1
-    Next k
+    
+    
+    ' Mark changes in selection
+    Call editChanges(changes, selection)
     
     ' Add important information below the table
     Dim keystrokeText As String
@@ -188,16 +176,20 @@ Function LevenshteinDifferences(selectedText As String, fileText As String) As C
 End Function
 
 ' Function to clean text by removing invalid characters from both ends
-Private Function cleanText(selectedText As String) As String
+Private Function cleanText(selectedText As String) As Object
     Dim cleaned As Boolean
+    Set dict = CreateObject("Scripting.Dictionary")
+    Dim startRemoved As Long
+    startRemoved = 0
     
     ' Loop to remove invalid characters from the start of the text
     cleaned = False
     Do While Not cleaned And Len(selectedText) > 0
         cleaned = True
-        If characterInArray(Left(selectedText, 1), INVALIDCHARS) Then
+        If characterInArray(left(selectedText, 1), INVALIDCHARS) Then
             selectedText = Right(selectedText, Len(selectedText) - 1)
             cleaned = False
+            startRemoved = startRemoved + 1
         End If
     Loop
     
@@ -206,12 +198,13 @@ Private Function cleanText(selectedText As String) As String
     Do While Not cleaned And Len(selectedText) > 0
         cleaned = True
         If characterInArray(Right(selectedText, 1), INVALIDCHARS) Then
-            selectedText = Left(selectedText, Len(selectedText) - 1)
+            selectedText = left(selectedText, Len(selectedText) - 1)
             cleaned = False
         End If
     Loop
-    
-    cleanText = selectedText
+    dict.Add "cleanedText", selectedText
+    dict.Add "startRemoved", startRemoved
+    Set cleanText = dict
 End Function
 
 ' Ensures only valid changes are added to the collection by excluding changes with invalid characters
@@ -281,9 +274,9 @@ End Function
 
 ' Determines the number of keystrokes required for a specific character
 Private Function getKeystrokeFromCharacter(character As String)
-    doubleKeystrokes = Array("€", "\", "{", "[", "]", "}", "²", "³", "°", "!", """", "§", "$", "%", "&", "/", "(", ")", "=", "?", "*", ">", ";", ":", "_", "@", "|", "'")
+    doubleKeystrokes = Array("â‚¬", "\", "{", "[", "]", "}", "Â²", "Â³", "Â°", "!", """", "Â§", "$", "%", "&", "/", "(", ")", "=", "?", "*", ">", ";", ":", "_", "@", "|", "'")
     
-    If character = "…" Then
+    If character = "â€¦" Then
        getKeystrokeFromCharacter = 3
     ElseIf character Like "[A-Z]" Or characterInArray(character, doubleKeystrokes) Then
         getKeystrokeFromCharacter = 2
@@ -302,3 +295,131 @@ Private Function characterInArray(character As String, arr As Variant) As Boolea
         End If
     Next element
 End Function
+
+' Processes a list of changes (Insert, delete, Replace) to a selected text range in a Word document, adding textboxes to highlight changes and adjusting the format of modified text areas.
+Private Sub editChanges(changes As Object, ByRef selection As Object)
+    Dim originalStart As Long, originalEnd As Long
+    Dim lastInsertPos As Long
+    Dim lastInsertTextBox As Object
+    lastInsertPos = -1
+    originalStart = selection.Start
+    
+    ' Set line spacing for selected paragraph
+    selection.ParagraphFormat.LineSpacingRule = wdLineSpaceExactly
+    selection.ParagraphFormat.LineSpacing = 36
+    
+    For Each change In changes
+        originalEnd = selection.End
+        If Len(selection.text) >= change("position") Then
+            Select Case change("changeType")
+                Case Insert
+                    ' Check if insertion position is the same as the last one
+                    If lastInsertPos = change("position") Then
+                        Dim textLen As Integer
+                        Dim textBoxStr As String
+                        textLen = Len(lastInsertTextBox.TextFrame.TextRange.text)
+                        textBoxStr = lastInsertTextBox.TextFrame.TextRange.text
+                        If textLen < 15 Then
+                            lastInsertTextBox.left = lastInsertTextBox.left - 5
+                            lastInsertTextBox.width = lastInsertTextBox.width + 10
+                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & left(textBoxStr, textLen - 1)
+                        ElseIf textLen = 15 Then
+                            lastInsertTextBox.left = lastInsertTextBox.left - 5
+                            lastInsertTextBox.width = lastInsertTextBox.width + 10
+                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & left(textBoxStr, 5) & "[â€¦]" & left(Right(textBoxStr, 9), 8)
+                        Else
+                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & left(textBoxStr, 5) & "[â€¦]" & left(Right(textBoxStr, 9), 8)
+                        End If
+                    Else
+                        ' Set new insertion position
+                        lastInsertPos = change("position")
+                        selection.Start = selection.Start + change("position") - 1
+                        selection.End = selection.Start + 1
+                        
+                        ' Add new text box for insertion
+                        Set lastInsertTextBox = ActiveDocument.Shapes.AddTextbox(msoTextOrientationHorizontal, _
+                            selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary), _
+                            selection.Range.Information(wdVerticalPositionRelativeToTextBoundary), _
+                            10, 35)
+                            
+                        lastInsertTextBox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) + 2.5
+                        lastInsertTextBox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
+                        
+                        ' Format text box
+                        formatTextBox (textbox)
+                        
+                        ' Set content of text box
+                        lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & vbCrLf & ChrW(&H22A5)
+                        
+                        ' Update selection
+                        selection.End = originalEnd + 1
+                    End If
+                Case delete
+                    selection.Start = selection.Start + change("position") - 1
+                    selection.End = selection.Start + 1
+                    selection.Font.Underline = wdUnderlineThick
+                    selection.Font.UnderlineColor = RGB(255, 0, 1)
+                    
+                    ' Add text box with delete marker
+                    Set textbox = ActiveDocument.Shapes.AddTextbox(msoTextOrientationHorizontal, _
+                        selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary), _
+                        selection.Range.Information(wdVerticalPositionRelativeToTextBoundary), _
+                        15, 20)
+                        
+                    textbox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
+                    textbox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary) + 12
+                    
+                    ' Format text box
+                    formatTextBox (textbox)
+                    
+                    ' Set delete marker
+                    textbox.TextFrame.TextRange.text = "/"
+                    
+                    ' Update selection
+                    selection.End = originalEnd + 1
+                Case Replace
+                    selection.Start = selection.Start + change("position") - 1
+                    selection.End = selection.Start + 1
+                    selection.Font.Underline = wdUnderlineThick
+                    selection.Font.UnderlineColor = RGB(255, 0, 1)
+                    
+                    ' Add text box with replacement character
+                    Set textbox = ActiveDocument.Shapes.AddTextbox(msoTextOrientationHorizontal, _
+                        selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary), _
+                        selection.Range.Information(wdVerticalPositionRelativeToTextBoundary), _
+                        15, 20)
+                        
+                    textbox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
+                    textbox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
+                                        
+                    ' Format text box
+                    formatTextBox (textbox)
+                    
+                    ' Set replacement text
+                    textbox.TextFrame.TextRange.text = change("newChar")
+                    
+                    ' Update selection
+                    selection.End = originalEnd + 1
+            End Select
+            ' Reset selection to original start
+            selection.Start = originalStart
+        End If
+    Next change
+End Sub
+
+' Formats the given text box by setting its font, margins, alignment, and making the text transparent with no border.
+Private Sub formatTextBox(ByRef textbox As Object)
+    textbox.Fill.Transparency = 1
+    textbox.TextFrame.TextRange.Font.Size = 12
+    textbox.TextFrame.TextRange.Font.Name = "Courier New"
+    textbox.TextFrame.TextRange.Font.COLOR = RGB(255, 0, 1)
+    textbox.TextFrame.TextRange.Font.Bold = True
+    textbox.TextFrame.MarginTop = 0
+    textbox.TextFrame.MarginBottom = 0
+    textbox.TextFrame.MarginLeft = 0
+    textbox.TextFrame.MarginRight = 0
+    textbox.TextFrame.TextRange.ParagraphFormat.SpaceAfter = 0
+    textbox.TextFrame.VerticalAnchor = msoAnchorBottom
+    textbox.TextFrame.TextRange.ParagraphFormat.Alignment = wdAlignParagraphCenter
+    textbox.line.Visible = msoFalse
+End Sub
