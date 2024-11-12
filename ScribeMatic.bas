@@ -301,6 +301,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
     Dim originalStart As Long, originalEnd As Long
     Dim lastInsertPos As Long
     Dim lastInsertTextBox As Object
+    Dim textBox As Object
     lastInsertPos = -1
     originalStart = selection.Start
     
@@ -346,7 +347,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                         lastInsertTextBox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
                         
                         ' Format text box
-                        formatTextBox (textbox)
+                        Call formatTextBox(lastInsertTextBox)
                         
                         ' Set content of text box
                         lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & vbCrLf & ChrW(&H22A5)
@@ -370,7 +371,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                     textbox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary) + 12
                     
                     ' Format text box
-                    formatTextBox (textbox)
+                    Call formatTextBox(textBox)
                     
                     ' Set delete marker
                     textbox.TextFrame.TextRange.text = "/"
@@ -393,7 +394,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                     textbox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
                                         
                     ' Format text box
-                    formatTextBox (textbox)
+                    Call formatTextBox(textBox)
                     
                     ' Set replacement text
                     textbox.TextFrame.TextRange.text = change("newChar")
@@ -408,7 +409,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
 End Sub
 
 ' Formats the given text box by setting its font, margins, alignment, and making the text transparent with no border.
-Private Sub formatTextBox(ByRef textbox As Object)
+Private Sub formatTextBox(ByRef textbox As shape)
     textbox.Fill.Transparency = 1
     textbox.TextFrame.TextRange.Font.Size = 12
     textbox.TextFrame.TextRange.Font.Name = "Courier New"
