@@ -444,5 +444,7 @@ Private Sub SaveAsFileDialog()
     ' Show the dialog
     If Not SaveAsDlg.Show = -1 Then ' -1 means the user clicked "Save"
         MsgBox "Save cancelled."
+    Else
+        SaveAsDlg.Execute
     End If
 End Sub
