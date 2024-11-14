@@ -64,7 +64,7 @@ Sub ScribeMatic()
     ' Prompt for keystroke count
     userInput = InputBox("Please enter the number of keystrokes (character count) to start comparison from:", "Keystroke Count", "1")
     If Not IsNumeric(userInput) Then
-       MsgBox "Invalid input. Please enter a numeric value."
+        MsgBox "Invalid input. Please enter a numeric value."
         Exit Sub
     End If
     keystrokeGoal = CInt(userInput)
@@ -106,7 +106,22 @@ Sub ScribeMatic()
     
     
     ' Mark changes in selection
-    Call editChanges(changes, selection)
+    If changes.Count > 15 Then
+        Dim antwort As VbMsgBoxResult
+        antwort = MsgBox("Es wurden mehr als 15 Fehler gefunden! Wurde der richtige Text ausgewählt?", vbExclamation + vbYesNo, "Fehlerwarnung")
+        
+        If antwort = vbYes Then
+            Call editChanges(changes, selection)
+        Else
+            ' Code, um abzubrechen
+            MsgBox "Prozess wurde abgebrochen.", vbInformation
+            Exit Sub
+        End If
+    Else
+        Call editChanges(changes, selection)
+    End If
+    
+    
     
     ' Add important information below the table
     Dim keystrokeText As String
@@ -190,7 +205,7 @@ Private Function cleanText(selectedText As String) As Object
     cleaned = False
     Do While Not cleaned And Len(selectedText) > 0
         cleaned = True
-        If characterInArray(left(selectedText, 1), INVALIDCHARS) Then
+        If characterInArray(Left(selectedText, 1), INVALIDCHARS) Then
             selectedText = Right(selectedText, Len(selectedText) - 1)
             cleaned = False
             startRemoved = startRemoved + 1
@@ -202,7 +217,7 @@ Private Function cleanText(selectedText As String) As Object
     Do While Not cleaned And Len(selectedText) > 0
         cleaned = True
         If characterInArray(Right(selectedText, 1), INVALIDCHARS) Then
-            selectedText = left(selectedText, Len(selectedText) - 1)
+            selectedText = Left(selectedText, Len(selectedText) - 1)
             cleaned = False
         End If
     Loop
@@ -325,15 +340,15 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                         textLen = Len(lastInsertTextBox.TextFrame.TextRange.text)
                         textBoxStr = lastInsertTextBox.TextFrame.TextRange.text
                         If textLen < 15 Then
-                            lastInsertTextBox.left = lastInsertTextBox.left - 5
+                            lastInsertTextBox.Left = lastInsertTextBox.Left - 5
                             lastInsertTextBox.width = lastInsertTextBox.width + 10
-                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & left(textBoxStr, textLen - 1)
+                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & Left(textBoxStr, textLen - 1)
                         ElseIf textLen = 15 Then
-                            lastInsertTextBox.left = lastInsertTextBox.left - 5
+                            lastInsertTextBox.Left = lastInsertTextBox.Left - 5
                             lastInsertTextBox.width = lastInsertTextBox.width + 10
-                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & left(textBoxStr, 5) & "[…]" & left(Right(textBoxStr, 9), 8)
+                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & Left(textBoxStr, 5) & "[…]" & Left(Right(textBoxStr, 9), 8)
                         Else
-                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & left(textBoxStr, 5) & "[…]" & left(Right(textBoxStr, 9), 8)
+                            lastInsertTextBox.TextFrame.TextRange.text = change("newChar") & Left(textBoxStr, 5) & "[…]" & Left(Right(textBoxStr, 9), 8)
                         End If
                     Else
                         ' Set new insertion position
@@ -347,7 +362,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                             selection.Range.Information(wdVerticalPositionRelativeToTextBoundary), _
                             10, 35)
                             
-                        lastInsertTextBox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) + 2.5
+                        lastInsertTextBox.Left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) + 2.5
                         lastInsertTextBox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
                         
                         ' Format text box
@@ -371,7 +386,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                         selection.Range.Information(wdVerticalPositionRelativeToTextBoundary), _
                         15, 20)
                         
-                    textBox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
+                    textBox.Left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
                     textBox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary) + 12
                     
                     ' Format text box
@@ -394,7 +409,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                         selection.Range.Information(wdVerticalPositionRelativeToTextBoundary), _
                         15, 20)
                         
-                    textBox.left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
+                    textBox.Left = selection.Range.Information(wdHorizontalPositionRelativeToTextBoundary) - 4
                     textBox.Top = selection.Range.Information(wdVerticalPositionRelativeToTextBoundary)
                                         
                     ' Format text box
@@ -418,7 +433,7 @@ Private Sub FormatTextBox(ByRef textBox As shape)
         .Fill.Transparency = 1
         .TextFrame.TextRange.Font.Size = 12
         .TextFrame.TextRange.Font.Name = "Courier New"
-        .TextFrame.TextRange.Font.COLOR = RGB(255, 0, 1)
+        .TextFrame.TextRange.Font.color = RGB(255, 0, 1)
         .TextFrame.TextRange.Font.Bold = True
         .TextFrame.MarginTop = 0
         .TextFrame.MarginBottom = 0
