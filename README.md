@@ -3,29 +3,24 @@
 
 Mit Hilfe des ScribeMatic-Makros können zwei Texte in Microsoft Word miteinander verglichen und Unterschiede gekennzeichnet werden. Es eignet sich besonders zur Korrektur und Überprüfung von Textabschriften.
 
+*Schon ein kleiner Beitrag zeigt große Wertschätzung – danke für die Unterstützung dieses Projekts!*
+
+[![Projekt unterstützen](https://img.shields.io/badge/Spenden-Support-blue?logo=paypal)](https://paypal.me/mexterngGitHub)
 # Voraussetzungen
 
 ## Software
-*english version below*
-
 - **Microsoft Word** (getestet ab Version 2010)
 
 ## Dokumentenaufbau
-*english version below*
-
 - Das zu prüfende Dokument muss reinen Text enthalten (nicht in Tabellen oder Textfeldern).
 - Der Referenztext muss als Textdatei im ANSI-Format vorliegen. Zeilenumbrüche werden dabei ignoriert.
 
 # Installation
-*english version below*
-
 1. Quellcode herunterladen.
    - Darauf achten, dass die Codierung korrekt ist. (Sonderzeichen in etwa Zeile 281). Ggf. den Code direkt aus dem Editor in GitHub kopieren.
 2. Makro in Microsoft Word importieren.
 
 ## Makro hinzufügen
-*english version below*
-
 ### Option 1: Global (für alle Dokumente)
 - Entwicklertools → Visual Basic → `Normal` → `Module` → Rechtsklick → Datei importieren → `ScribeMatic.bas` auswählen.
 
@@ -35,15 +30,11 @@ Mit Hilfe des ScribeMatic-Makros können zwei Texte in Microsoft Word miteinande
 ⚠️ Word-Dokument anschließend im Format `.docm` (Dokument mit Makros) speichern.
 
 ## Makro zum Menüband hinzufügen
-*english version below*
-
 1. **Word-Optionen** → Menüband anpassen.
 2. **Befehle auswählen**: Makros und gewünschte Registerkarte und Gruppe auswählen.
    - Optional: Beschriftung und Icon anpassen. ![grafik](https://github.com/user-attachments/assets/2b452ede-53f2-4729-a8fd-dfbc674d2fc0)
 
 # Verwendung
-*english version below*
-
 1. Textabschnitt markieren, der mit dem Referenztext verglichen werden soll. Dieser sollte mit dem Referenztext übereinstimmen, kann jedoch kürzer sein.
 2. Im sich öffnenden Fenster die Referenzdatei (im ANSI-Format) auswählen.
 3. Anzahl der erwarteten Zeichenanschläge angeben.
@@ -51,8 +42,6 @@ Mit Hilfe des ScribeMatic-Makros können zwei Texte in Microsoft Word miteinande
 4. Alle nötigen Änderungen werden in Dokument markiert.
 
 ## Funktionsweise des Makros
-*english version below*
-
 Das Makro `ScribeMatic()` markiert Unterschiede im Vergleich zum Referenztext. Die Korrekturzeichen sind wie folgt:
 
 - **Insert**: Einfügen eines Zeichens, markiert durch senkrechte und waagerechte Linien.
@@ -60,8 +49,6 @@ Das Makro `ScribeMatic()` markiert Unterschiede im Vergleich zum Referenztext. D
 - **Delete**: Löschen eines überflüssigen Zeichens, durchgestrichen.
 
 # Anwendungsfälle
-*english version below*
-
 - **Abschriftkorrektur**: Für Übungen mit zeitgesteuerten Abschriften (z. B. 10 Minuten für 700 Anschläge).
   - Schülertext markieren und Makro starten.
   - Referenzdatei auswählen und Zielanzahl angeben.
@@ -69,15 +56,21 @@ Das Makro `ScribeMatic()` markiert Unterschiede im Vergleich zum Referenztext. D
 
 # Mitwirken
 
-Es kann ein Issue oder ein Pull Request geöffnet werden.
+Es kann ein Issue oder ein Pull Request geöffnet werden – ich freue mich über jede Form der Unterstützung!
 
--------
--------
+*Schon ein kleiner Beitrag zeigt große Wertschätzung – danke für die Unterstützung dieses Projekts!*
+
+[![Projekt unterstützen](https://img.shields.io/badge/Spenden-Support-blue?logo=paypal)](https://paypal.me/mexterngGitHub)
+
 -------
 
 # MSWord_ScribeMatic
 
 The ScribeMatic macro allows for comparing two texts in Microsoft Word and marking differences. It's particularly useful for correcting and reviewing transcribed texts.
+
+A small gesture can make a big difference – thank you for supporting this project!
+
+[![Projekt unterstützen](https://img.shields.io/badge/Spenden-Support-blue?logo=paypal)](https://paypal.me/mexterngGitHub)
 
 # Requirements
 
@@ -138,3 +131,7 @@ The `ScribeMatic()` macro marks differences compared to the reference text. Corr
 # Contributing
 
 Feel free to open an issue or a pull request.
+
+A small gesture can make a big difference – thank you for supporting this project!
+
+[![Projekt unterstützen](https://img.shields.io/badge/Spenden-Support-blue?logo=paypal)](https://paypal.me/mexterngGitHub)
