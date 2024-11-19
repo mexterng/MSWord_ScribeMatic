@@ -6,6 +6,10 @@ Mit Hilfe des ScribeMatic-Makros können zwei Texte in Microsoft Word miteinande
 *Schon ein kleiner Beitrag zeigt große Wertschätzung – danke für die Unterstützung dieses Projekts!*
 
 [![Projekt unterstützen](https://img.shields.io/badge/Spenden-Support-blue?logo=paypal)](https://paypal.me/mexterngGitHub)
+
+# Beispiel
+![Beispiel](https://github.com/user-attachments/assets/e3ec0b6f-516f-4488-9773-9fc8db0a2b8c)
+
 # Voraussetzungen
 
 ## Software
@@ -71,6 +75,9 @@ The ScribeMatic macro allows for comparing two texts in Microsoft Word and marki
 A small gesture can make a big difference – thank you for supporting this project!
 
 [![Projekt unterstützen](https://img.shields.io/badge/Spenden-Support-blue?logo=paypal)](https://paypal.me/mexterngGitHub)
+
+# Example
+![Example](https://github.com/user-attachments/assets/e3ec0b6f-516f-4488-9773-9fc8db0a2b8c)
 
 # Requirements
 
