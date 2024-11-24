@@ -77,7 +77,9 @@ Sub ScribeMatic()
         fileText = fileText & line & vbCrLf
     Loop
     Close #1
-
+    
+    fileText = GetSimilarSubString(selectedText, fileText, keystrokeGoal)
+    
     ' Initialize collection to store changes
     Dim int1 As Long, int2 As Long, int3 As Long
     Set changes = LevenshteinDifferences(selectedText, fileText)
@@ -463,3 +465,113 @@ Private Sub SaveAsFileDialog()
         SaveAsDlg.Execute
     End If
 End Sub
+
+' Function to find the best match with the highest Jaccard similarity
+Private Function GetSimilarSubString(selectedText As String, fileText As String, minKeyStroke As Integer) As String
+    Dim fileWords() As String
+    Dim selectedWords() As String
+    Dim lastJacIdx As Double
+    Dim bestJacIdx As Double
+    Dim bestIdx As Integer
+    Dim idx As Integer
+    Dim jacIdx As Double
+    Dim currentText As String
+    Dim currentKeystroke As Integer
+    
+    ' Split the file and selected strings into words
+    fileWords = Split(fileText, " ")
+    selectedWords = Split(selectedText, " ")
+    
+    idx = 0
+    currentKeystroke = -1
+    lastJacIdx = 0
+    bestJacIdx = 0
+    bestIdx = 0
+    
+    ' Start with minKeyStroke
+    While currentKeystroke < minKeyStroke
+        currentText = Join(SliceArray(fileWords, 0, idx), " ")
+        currentKeystroke = currentKeystroke + countKeystrokesFromLine(fileWords(idx)) + 1
+        idx = idx + 1
+    Wend
+        
+    startIdx = idx
+    ' Loop through the words in the file starting from the length of selected
+    For idx = startIdx To UBound(fileWords)
+        ' Calculate Jaccard similarity for the current set of words in the file
+        currentText = Join(SliceArray(fileWords, 0, idx), " ")
+        jacIdx = JaccardSimilarity(selectedText, currentText)
+        
+        ' Check if the Jaccard index improves with the added word
+        If lastJacIdx < jacIdx Then
+            bestIdx = idx
+            bestJacIdx = jacIdx
+        End If
+        lastJacIdx = jacIdx
+    Next idx
+    
+    ' Return the best match with the highest Jaccard similarity
+    GetSimilarSubString = Join(SliceArray(fileWords, 0, bestIdx), " ")
+End Function
+' Function to calculate Jaccard similarity between two strings
+Private Function JaccardSimilarity(str1 As String, str2 As String) As Double
+    Dim words1() As String, words2() As String
+    Dim set1 As Object, set2 As Object
+    Dim intersectionCount As Integer
+    Dim word As Variant
+    
+    ' Split the input strings into words
+    words1 = Split(LCase(str1), " ")
+    words2 = Split(LCase(str2), " ")
+    
+    ' Create dictionaries to simulate sets (unique words)
+    Set set1 = CreateObject("Scripting.Dictionary")
+    Set set2 = CreateObject("Scripting.Dictionary")
+    
+    ' Add words from the first string to set1 (ensure uniqueness)
+    For Each word In words1
+        set1(word) = True
+    Next word
+    
+    ' Add words from the second string to set2 (ensure uniqueness)
+    For Each word In words2
+        set2(word) = True
+    Next word
+    
+    ' Calculate intersection count (common words)
+    intersectionCount = 0
+    For Each word In set1.Keys
+        If set2.Exists(word) Then
+            intersectionCount = intersectionCount + 1
+        End If
+    Next word
+    
+    ' Calculate the size of the union (all unique words)
+    Dim unionCount As Integer
+    unionCount = set1.Count + set2.Count - intersectionCount
+    
+    ' Compute the Jaccard Index
+    If unionCount > 0 Then
+        JaccardSimilarity = intersectionCount / unionCount
+    Else
+        JaccardSimilarity = 0 ' No common words
+    End If
+End Function
+
+' Helper function to slice an array (similar to Python's array slicing)
+Private Function SliceArray(arr As Variant, startIdx As Integer, endIdx As Integer) As Variant
+    Dim result() As String
+    Dim i As Integer
+    Dim j As Integer
+    
+    ' Ensure the range is valid
+    If endIdx > UBound(arr) Then endIdx = UBound(arr)
+    
+    ReDim result(endIdx - startIdx)
+    
+    For i = startIdx To endIdx
+        result(i - startIdx) = arr(i)
+    Next i
+    
+    SliceArray = result
+End Function
