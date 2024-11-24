@@ -108,7 +108,7 @@ Sub ScribeMatic()
     ' Mark changes in selection
     If changes.Count > 15 Then
         Dim antwort As VbMsgBoxResult
-        antwort = MsgBox("Es wurden mehr als 15 Fehler gefunden! Wurde der richtige Text ausgewählt?", vbExclamation + vbYesNo, "Fehlerwarnung")
+        antwort = MsgBox("Es wurden insgesamt " + CStr(changes.Count) + " Fehler gefunden! Überprüfe, ob der richtige Text ausgewählt wurde. Soll fortgefahren werden?", vbExclamation + vbYesNo, "Fehlerwarnung")
         
         If antwort = vbYes Then
             Call editChanges(changes, selection)
