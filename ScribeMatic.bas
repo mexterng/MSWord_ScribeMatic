@@ -4,9 +4,9 @@ Private INVALIDCHARS As Variant
 
 ' Define the change type enumeration
 Private Enum changeType
-    Insert = 1
-    delete = -1
-    Replace = 0
+    insertChar = 1
+    deleteChar = -1
+    replaceChar = 0
 End Enum
 
 ' Class-like structure within a module (simulated)
@@ -78,6 +78,7 @@ Sub ScribeMatic()
     Loop
     Close #1
     
+    fileText = cleanText(fileText)("cleanedText")
     fileText = GetSimilarSubString(selectedText, fileText, keystrokeGoal)
     
     ' Initialize collection to store changes
@@ -99,7 +100,7 @@ Sub ScribeMatic()
         Dim endPos As Long
         endPos = changes(1)("position")
         For Each elem In changes
-            If Not (elem("changeType") = Insert And elem("keystroke") > keystrokeGoal) Or endPos <> elem("position") Then
+            If Not (elem("changeType") = insertChar And elem("keystroke") > keystrokeGoal) Or endPos <> elem("position") Then
                 cleanedChanges.Add elem
             End If
         Next elem
@@ -172,17 +173,17 @@ Function LevenshteinDifferences(selectedText As String, fileText As String) As C
     While i > 0 Or j > 0
         If i > 0 And d(i - 1, j) + 1 = d(i, j) Then
             ' Delete (from selectedText)
-            Set change = getChangeDict(delete, i, mid(selectedText, i, 1), "")
+            Set change = getChangeDict(deleteChar, i, mid(selectedText, i, 1), "")
             Call addSafety(changes, change)
             i = i - 1
         ElseIf j > 0 And d(i, j - 1) + 1 = d(i, j) Then
             ' Insert (in fileText)
-            Set change = getChangeDict(Insert, i, "", mid(fileText, j, 1))
+            Set change = getChangeDict(insertChar, i, "", mid(fileText, j, 1))
             Call addSafety(changes, change)
             j = j - 1
         ElseIf i > 0 And j > 0 And d(i - 1, j - 1) + 1 = d(i, j) Then
             ' Replace
-            Set change = getChangeDict(Replace, i, mid(selectedText, i, 1), mid(fileText, j, 1))
+            Set change = getChangeDict(replaceChar, i, mid(selectedText, i, 1), mid(fileText, j, 1))
             Call addSafety(changes, change)
             i = i - 1
             j = j - 1
@@ -257,11 +258,11 @@ End Function
 ' Converts the ChangeType enum value to a string
 Private Function getChangeTypeString(ByVal changeType As changeType) As String
     Select Case changeType
-        Case Insert
+        Case insertChar
             getChangeTypeString = "Insert"
-        Case delete
+        Case deleteChar
             getChangeTypeString = "Delete"
-        Case Replace
+        Case replaceChar
             getChangeTypeString = "Replace"
         Case Else
             getChangeTypeString = "Unknown"
@@ -271,12 +272,12 @@ End Function
 ' Converts the ChangeType enum value to an integer
 Private Function getChangeTypeInteger(ByVal inputType As changeType) As Integer
     Select Case inputType
-        Case changeType.Insert
-            getChangeTypeInteger = changeType.Insert
-        Case changeType.delete
-            getChangeTypeInteger = changeType.delete
-        Case changeType.Replace
-            getChangeTypeInteger = changeType.Replace
+        Case changeType.insertChar
+            getChangeTypeInteger = changeType.insertChar
+        Case changeType.deleteChar
+            getChangeTypeInteger = changeType.deleteChar
+        Case changeType.replaceChar
+            getChangeTypeInteger = changeType.replaceChar
         Case Else
             getChangeTypeInteger = -99 ' Falls der Typ nicht definiert ist
     End Select
@@ -334,7 +335,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
         originalEnd = selection.End
         If Len(selection.text) >= change("position") Then
             Select Case change("changeType")
-                Case Insert
+                Case insertChar
                     ' Check if insertion position is the same as the last one
                     If lastInsertPos = change("position") Then
                         Dim textLen As Integer
@@ -376,7 +377,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                         ' Update selection
                         selection.End = originalEnd + 1
                     End If
-                Case delete
+                Case deleteChar
                     selection.Start = selection.Start + change("position") - 1
                     selection.End = selection.Start + 1
                     selection.Font.Underline = wdUnderlineThick
@@ -399,7 +400,7 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                     
                     ' Update selection
                     selection.End = originalEnd + 1
-                Case Replace
+                Case replaceChar
                     selection.Start = selection.Start + change("position") - 1
                     selection.End = selection.Start + 1
                     selection.Font.Underline = wdUnderlineThick
@@ -471,7 +472,6 @@ Private Function GetSimilarSubString(selectedText As String, fileText As String,
     Dim fileWords() As String
     Dim selectedWords() As String
     Dim lastJacIdx As Double
-    Dim bestJacIdx As Double
     Dim bestIdx As Integer
     Dim idx As Integer
     Dim jacIdx As Double
@@ -480,12 +480,12 @@ Private Function GetSimilarSubString(selectedText As String, fileText As String,
     
     ' Split the file and selected strings into words
     fileWords = Split(fileText, " ")
+    selectedText = Replace(Replace(Replace(selectedText, vbCrLf, " "), vbCr, " "), vbLf, " ")
     selectedWords = Split(selectedText, " ")
     
     idx = 0
     currentKeystroke = -1
     lastJacIdx = 0
-    bestJacIdx = 0
     bestIdx = 0
     
     ' Start with minKeyStroke
@@ -505,13 +505,16 @@ Private Function GetSimilarSubString(selectedText As String, fileText As String,
         ' Check if the Jaccard index improves with the added word
         If lastJacIdx < jacIdx Then
             bestIdx = idx
-            bestJacIdx = jacIdx
         End If
         lastJacIdx = jacIdx
     Next idx
     
+    If bestIdx = 0 Then
+        bestIdx = UBound(fileWords)
+    End If
+    
     ' Return the best match with the highest Jaccard similarity
-    GetSimilarSubString = Join(SliceArray(fileWords, 0, bestIdx), " ")
+    GetSimilarSubString = Join(SliceArray(fileWords, 0, bestIdx + 1), " ")
 End Function
 ' Function to calculate Jaccard similarity between two strings
 Private Function JaccardSimilarity(str1 As String, str2 As String) As Double
