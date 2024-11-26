@@ -128,8 +128,12 @@ Sub ScribeMatic()
     
     ' Add important information below the table
     Dim keystrokeText As String
-    keystrokeText = selectedTextKeystrokes & " / " & keystrokeGoal & " keystrokes reached."
+    keystrokeText = selectedTextKeystrokes & " / " & keystrokeGoal & " Anschläge"
     doc.Range(doc.Content.End - 1, doc.Content.End).InsertAfter vbCrLf & keystrokeText
+    With doc.Range(doc.Content.End - Len(keystrokeText) - 1, doc.Content.End).Font
+        .Bold = True
+        .color = wdColorRed
+    End With
 
     Call SaveAsFileDialog
 End Sub
