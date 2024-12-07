@@ -398,10 +398,11 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                     Call FormatTextBox(textBox)
                     
                     ' Set delete marker
-                    with textBox.TextFrame.textRange
+                    With textBox.TextFrame.textRange
                         .text = "/"
                         .Font.Underline = wdUnderlineThick
                         .Font.UnderlineColor = RGB(255, 0, 1)
+                    End With
                     
                     ' Update selection
                     selection.End = originalEnd + 1
