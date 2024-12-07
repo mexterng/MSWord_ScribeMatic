@@ -384,8 +384,6 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                 Case deleteChar
                     selection.Start = selection.Start + change("position") - 1
                     selection.End = selection.Start + 1
-                    selection.Font.Underline = wdUnderlineThick
-                    selection.Font.UnderlineColor = RGB(255, 0, 1)
                     
                     ' Add text box with delete marker
                     Set textBox = ActiveDocument.Shapes.AddTextbox(msoTextOrientationHorizontal, _
@@ -400,7 +398,10 @@ Private Sub editChanges(changes As Object, ByRef selection As Object)
                     Call FormatTextBox(textBox)
                     
                     ' Set delete marker
-                    textBox.TextFrame.TextRange.text = "/"
+                    with textBox.TextFrame.textRange
+                        .text = "/"
+                        .Font.Underline = wdUnderlineThick
+                        .Font.UnderlineColor = RGB(255, 0, 1)
                     
                     ' Update selection
                     selection.End = originalEnd + 1
